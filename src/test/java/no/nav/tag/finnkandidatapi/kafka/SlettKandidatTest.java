@@ -87,12 +87,10 @@ public class SlettKandidatTest {
         restTemplate.delete(deleteUri);
 
         // Then
-        ConsumerRecord<String, String> opprettMelding = KafkaTestUtils.getSingleRecord(consumer, "aapen-tag-kandidatEndret-v1-default", 2000L);
-        System.out.println("opprettmelding: " + opprettMelding);
-
-        ConsumerRecord<String, String> slettMelding = KafkaTestUtils.getSingleRecord(consumer, "aapen-tag-kandidatEndret-v1-default", 2000L);
-        System.out.println("slettmelding: " + slettMelding);
-        HarTilretteleggingsbehov actualTilretteleggingsbehov = new ObjectMapper().readValue(slettMelding.value(), HarTilretteleggingsbehov.class);
+        List<ConsumerRecord<String, String>> records = new ArrayList<>();
+        KafkaTestUtils.getRecords(consumer, 9000L).records("aapen-tag-kandidatEndret-v1-default").forEach(records::add);
+        assertThat(records.size()).isEqualTo(2);
+        HarTilretteleggingsbehov actualTilretteleggingsbehov = new ObjectMapper().readValue(records.get(1).value(), HarTilretteleggingsbehov.class);
         assertThat(actualTilretteleggingsbehov.getAktoerId()).isEqualTo(dto.getAktørId());
         assertThat(actualTilretteleggingsbehov.isHarTilretteleggingsbehov()).isFalse();
         assertThat(actualTilretteleggingsbehov.getBehov()).isEmpty();
@@ -111,7 +109,7 @@ public class SlettKandidatTest {
         System.out.println(consumer);
 
         // Then
-        ConsumerRecord<String, String> melding = KafkaTestUtils.getSingleRecord(consumer, "aapen-tag-kandidatEndret-v1-default", 2000L);
+        ConsumerRecord<String, String> melding = KafkaTestUtils.getSingleRecord(consumer, "aapen-tag-kandidatEndret-v1-default", 9000L);
         System.out.println(melding);
         HarTilretteleggingsbehov actualTilretteleggingsbehov = new ObjectMapper().readValue(melding.value(), HarTilretteleggingsbehov.class);
         List<String> actualBehov = actualTilretteleggingsbehov.getBehov();
@@ -127,7 +125,7 @@ public class SlettKandidatTest {
     }
 
     @Test
-    public void nårMottarHttpRequest3_skalSendeKafkaMelding() throws JsonProcessingException {
+    public void nårMottarHttpRequest3_skalSendeKafkaMelding() throws JsonProcessingException, InterruptedException {
         // Given
         URI uri = URI.create(localBaseUrl() + "/kandidater");
         KandidatDto dto = enKandidatDto();
@@ -141,7 +139,9 @@ public class SlettKandidatTest {
 
         // Then
         List<ConsumerRecord<String, String>> records = new ArrayList<>();
-        KafkaTestUtils.getRecords(consumer, 1000L).records("aapen-tag-kandidatEndret-v1-default").forEach(records::add);
+        for (int i = 0;  records.size() < List.of("opprett", "endre").size() || i < 1000; i++) { // Blæææææ terminerer ikke engang
+            KafkaTestUtils.getRecords(consumer, 9000L).records("aapen-tag-kandidatEndret-v1-default").forEach(records::add);
+        }
 
         System.out.println(records);
 
