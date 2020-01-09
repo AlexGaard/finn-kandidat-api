@@ -139,7 +139,7 @@ public class SlettKandidatTest {
 
         // Then
         List<ConsumerRecord<String, String>> records = new ArrayList<>();
-        for (int i = 0;  records.size() < List.of("opprett", "endre").size() || i < 1000; i++) { // Blæææææ terminerer ikke engang
+        while (records.size() < 2) {
             KafkaTestUtils.getRecords(consumer, 9000L).records("aapen-tag-kandidatEndret-v1-default").forEach(records::add);
         }
 
