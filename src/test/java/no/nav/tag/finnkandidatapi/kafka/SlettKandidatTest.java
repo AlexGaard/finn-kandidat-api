@@ -63,6 +63,7 @@ public class SlettKandidatTest {
             Map<String, Object> consumerProps = KafkaTestUtils.consumerProps("testGroup", "true", embeddedKafka.getEmbeddedKafka());
             consumerProps.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
             consumerProps.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+            consumerProps.put(ConsumerConfig.CLIENT_ID_CONFIG, "testClientId");
 
             ConsumerFactory<String, String> cf = new DefaultKafkaConsumerFactory<>(consumerProps);
             consumer = cf.createConsumer();
