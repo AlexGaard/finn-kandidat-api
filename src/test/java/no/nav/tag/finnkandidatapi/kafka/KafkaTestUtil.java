@@ -1,23 +1,54 @@
 package no.nav.tag.finnkandidatapi.kafka;
 
-import org.apache.kafka.clients.consumer.ConsumerConfig;
-import org.apache.kafka.clients.consumer.ConsumerRecords;
-import org.apache.kafka.clients.consumer.KafkaConsumer;
-import org.apache.kafka.clients.consumer.OffsetResetStrategy;
+import org.apache.kafka.clients.consumer.*;
 import org.apache.kafka.common.serialization.StringDeserializer;
+import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
+import org.springframework.kafka.listener.ContainerProperties;
+import org.springframework.kafka.listener.KafkaMessageListenerContainer;
+import org.springframework.kafka.listener.MessageListener;
+import org.springframework.kafka.test.EmbeddedKafkaBroker;
+import org.springframework.kafka.test.utils.ContainerTestUtils;
 import org.springframework.kafka.test.utils.KafkaTestUtils;
 
 import java.time.Duration;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
+import java.util.*;
+import java.util.concurrent.*;
+
+import static java.util.concurrent.TimeUnit.SECONDS;
 
 class KafkaTestUtil {
+
+    static BlockingQueue<ConsumerRecord<String, String>> receiveRecords(final EmbeddedKafkaBroker kafka, final String topicName) {
+        Map<String, Object> consumerProps = KafkaTestUtils.consumerProps("testGroup", "false", kafka);
+        DefaultKafkaConsumerFactory<String, String> cf = new DefaultKafkaConsumerFactory<>(consumerProps, new StringDeserializer(), new StringDeserializer());
+        ContainerProperties containerProperties = new ContainerProperties(topicName);
+        KafkaMessageListenerContainer<String, String> container = new KafkaMessageListenerContainer<>(cf, containerProperties);
+        BlockingQueue<ConsumerRecord<String, String>> receivedRecords = new LinkedBlockingQueue<>();
+        container.setupMessageListener((MessageListener<String, String>) record -> {
+            System.out.println("AAA " + record);
+            receivedRecords.add(record);
+        });
+//        container.setBeanName(this.getClass().getSimpleName());
+        container.start();
+        ContainerTestUtils.waitForAssignment(container, kafka.getPartitionsPerTopic());
+        return receivedRecords;
+    }
+
+    static List<String> recordValues(BlockingQueue<ConsumerRecord<String, String>> records, int numberOfMessages) throws InterruptedException {
+        if (numberOfMessages < 1) return List.of();
+        List<String> msgs = new ArrayList<>();
+        long startTimeMillies = System.currentTimeMillis();
+        Optional.ofNullable(records.poll(10, SECONDS)).ifPresent(r -> msgs.add(r.value()));
+        for (int i = 1; i < numberOfMessages; i++) {
+            Optional.ofNullable(records.poll(1, SECONDS)).ifPresent(r -> msgs.add(r.value()));
+        }
+        long waitTimeSeconds = Duration.ofMillis(System.currentTimeMillis() - startTimeMillies).toSeconds();
+        if (msgs.size() < numberOfMessages) {
+            String msg = "Only " + msgs.size() + " of expected " + numberOfMessages + " messages received within the given duration of " + waitTimeSeconds + " seconds..";
+            throw new AssertionError(msg);
+        }
+        return Collections.unmodifiableList(msgs);
+    }
 
     static List<String> readKafkaMessages(final EnKafkaMockServer embeddedKafka, final int minExpectedMsgs) {
         return readKafkaMessages(embeddedKafka, minExpectedMsgs, Duration.ofSeconds(10));
@@ -51,7 +82,7 @@ class KafkaTestUtil {
         final long maxWaitSeconds = maxWaitDuration.toSeconds() <= 0 ? 1 : maxWaitDuration.toSeconds();
         final boolean waitTimeIsExhausted;
         try {
-            waitTimeIsExhausted = !latch.await(maxWaitSeconds, TimeUnit.SECONDS);
+            waitTimeIsExhausted = !latch.await(maxWaitSeconds, SECONDS);
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
