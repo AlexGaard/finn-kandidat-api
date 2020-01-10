@@ -88,7 +88,9 @@ public class SlettKandidatTest {
 
         // Then
         List<ConsumerRecord<String, String>> records = new ArrayList<>();
-        KafkaTestUtils.getRecords(consumer, 9000L).records("aapen-tag-kandidatEndret-v1-default").forEach(records::add);
+        while (records.size() < 2) {
+            KafkaTestUtils.getRecords(consumer, 9000L).records("aapen-tag-kandidatEndret-v1-default").forEach(records::add);
+        }
         assertThat(records.size()).isEqualTo(2);
         HarTilretteleggingsbehov actualTilretteleggingsbehov = new ObjectMapper().readValue(records.get(1).value(), HarTilretteleggingsbehov.class);
         assertThat(actualTilretteleggingsbehov.getAktoerId()).isEqualTo(dto.getAktørId());
