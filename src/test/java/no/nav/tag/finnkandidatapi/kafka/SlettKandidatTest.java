@@ -108,11 +108,8 @@ public class SlettKandidatTest {
         // When
         restTemplate.postForEntity(uri, dto, String.class);
 
-        System.out.println(consumer);
-
         // Then
         ConsumerRecord<String, String> melding = KafkaTestUtils.getSingleRecord(consumer, "aapen-tag-kandidatEndret-v1-default", 9000L);
-        System.out.println(melding);
         HarTilretteleggingsbehov actualTilretteleggingsbehov = new ObjectMapper().readValue(melding.value(), HarTilretteleggingsbehov.class);
         List<String> actualBehov = actualTilretteleggingsbehov.getBehov();
         final Set<String> expectedBehov = Set.of(
@@ -127,7 +124,7 @@ public class SlettKandidatTest {
     }
 
     @Test
-    public void nårMottarHttpRequest3_skalSendeKafkaMelding() throws JsonProcessingException, InterruptedException {
+    public void nårMottarHttpRequest3_skalSendeKafkaMelding() throws JsonProcessingException {
         // Given
         URI uri = URI.create(localBaseUrl() + "/kandidater");
         KandidatDto dto = enKandidatDto();
@@ -144,8 +141,6 @@ public class SlettKandidatTest {
         while (records.size() < 2) {
             KafkaTestUtils.getRecords(consumer, 9000L).records("aapen-tag-kandidatEndret-v1-default").forEach(records::add);
         }
-
-        System.out.println(records);
 
         assertThat(records.size()).isEqualTo(2);
 
