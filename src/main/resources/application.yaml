@@ -57,6 +57,9 @@ SERVICEBRUKER_PASSORD: na
 oppfolging-avsluttet.topic: en-kafka-topic
 oppfolging-endret.topic: en-annen-kafka-topic
 
+TRELLO_KEY: na
+TRELLO_TOKEN: na
+
 ---
 spring:
   profiles: dev

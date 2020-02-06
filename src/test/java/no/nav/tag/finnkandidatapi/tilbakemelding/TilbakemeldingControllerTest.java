@@ -1,6 +1,7 @@
 package no.nav.tag.finnkandidatapi.tilbakemelding;
 
 import no.nav.tag.finnkandidatapi.kandidat.Veileder;
+import no.nav.tag.finnkandidatapi.tilbakemelding.trello.TrelloClient;
 import no.nav.tag.finnkandidatapi.tilgangskontroll.TilgangskontrollException;
 import no.nav.tag.finnkandidatapi.tilgangskontroll.TilgangskontrollService;
 import org.junit.Before;
@@ -31,11 +32,19 @@ public class TilbakemeldingControllerTest {
     @Mock
     private TilbakemeldingConfig tilbakemeldingConfig;
 
+    @Mock
+    private TrelloClient trelloClient;
+
     private TilbakemeldingController tilbakemeldingController;
 
     @Before
     public void setUp() {
-        tilbakemeldingController = new TilbakemeldingController(repository, tilgangskontrollService, tilbakemeldingConfig);
+        tilbakemeldingController = new TilbakemeldingController(
+                repository,
+                tilgangskontrollService,
+                tilbakemeldingConfig,
+                trelloClient
+        );
     }
 
     @Test

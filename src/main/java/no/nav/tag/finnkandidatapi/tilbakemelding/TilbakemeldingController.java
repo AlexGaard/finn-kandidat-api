@@ -2,9 +2,9 @@ package no.nav.tag.finnkandidatapi.tilbakemelding;
 
 import no.nav.metrics.MetricsFactory;
 import no.nav.security.oidc.api.Protected;
+import no.nav.tag.finnkandidatapi.tilbakemelding.trello.TrelloClient;
 import no.nav.tag.finnkandidatapi.tilgangskontroll.TilgangskontrollException;
 import no.nav.tag.finnkandidatapi.tilgangskontroll.TilgangskontrollService;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -19,14 +19,16 @@ public class TilbakemeldingController {
     private final TilbakemeldingRepository repository;
     private final TilgangskontrollService tilgangskontrollService;
     private final TilbakemeldingConfig config;
+    private final TrelloClient trelloClient;
 
     public TilbakemeldingController(
             TilbakemeldingRepository repository,
             TilgangskontrollService tilgangskontrollService,
-            TilbakemeldingConfig config) {
+            TilbakemeldingConfig config, TrelloClient trelloClient) {
         this.repository = repository;
         this.tilgangskontrollService = tilgangskontrollService;
         this.config = config;
+        this.trelloClient = trelloClient;
     }
 
     @PostMapping
@@ -36,6 +38,8 @@ public class TilbakemeldingController {
                 .addFieldToReport("behov", tilbakemelding.getBehov())
                 .addFieldToReport("tilbakemelding", tilbakemelding.getTilbakemelding())
                 .report();
+
+        trelloClient.opprettKort(tilbakemelding);
 
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
