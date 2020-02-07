@@ -134,6 +134,12 @@
 			<version>3.2.9</version>
 		</dependency>
 
+		<dependency>
+			<groupId>no.nav.common</groupId>
+			<artifactId>api-app</artifactId>
+			<version>1.2020.01.23-17.30-c6684f7b3098</version>
+		</dependency>
+
 		<!-- login-support -->
 		<dependency>
 			<groupId>no.nav.security</groupId>

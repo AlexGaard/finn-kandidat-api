@@ -1,6 +1,8 @@
 package no.nav.tag.finnkandidatapi.tilgangskontroll;
 
 import lombok.extern.slf4j.Slf4j;
+import no.nav.apiapp.security.PepClient;
+import no.nav.sbl.dialogarena.common.abac.pep.AbacPersonId;
 import no.nav.tag.finnkandidatapi.kandidat.Veileder;
 import no.nav.tag.finnkandidatapi.tilgangskontroll.veilarbabac.VeilarbabacClient;
 import no.nav.tag.finnkandidatapi.unleash.FeatureToggleService;
@@ -15,15 +17,20 @@ public class TilgangskontrollService {
     private final TokenUtils tokenUtils;
     private final VeilarbabacClient  veilarbabacClient;
     private final FeatureToggleService featureToggleService;
+    private final PepClient pepClient;
 
     public TilgangskontrollService(
             TokenUtils tokenUtils,
             VeilarbabacClient veilarbabacClient,
-            FeatureToggleService featureToggleService
+            FeatureToggleService featureToggleService,
+            PepClient pepClient
     ) {
         this.tokenUtils = tokenUtils;
         this.veilarbabacClient = veilarbabacClient;
         this.featureToggleService = featureToggleService;
+        this.pepClient = pepClient;
+
+        pepClient.sjekkLesetilgang(AbacPersonId.aktorId("basdasd"));
     }
 
     public boolean harLesetilgangTilKandidat(String aktørId) {
