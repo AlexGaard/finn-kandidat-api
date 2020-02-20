@@ -1,10 +1,9 @@
 package no.nav.tag.finnkandidatapi.kandidat;
 
 public enum Arbeidshverdagen {
-    TILRETTELAGT_OPPLÆRING, OPPLÆRING,
-    TILRETTELAGTE_ARBEIDSOPPGAVER, OPPGAVER,
-    MENTOR, TETT_OPPFØLGING,
-    ANNET,
+    OPPLÆRING,
+    OPPGAVER,
+    TETT_OPPFØLGING,
     STILLE_OG_ROLIG_MILJØ;
 
     public static final String behovskategori = "arbeidshverdagen";
