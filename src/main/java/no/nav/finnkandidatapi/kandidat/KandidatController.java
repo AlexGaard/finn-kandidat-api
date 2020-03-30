@@ -152,20 +152,22 @@ public class KandidatController {
     @DeleteMapping("/{fnrEllerAktørId}")
     public ResponseEntity slettKandidat(@PathVariable("fnrEllerAktørId") String fnrEllerAktørId) {
         loggBrukAvEndepunkt("slettKandidat");
+        tilgangskontroll.sjekkPilotTilgang();
 
         boolean erFnr = isValid(fnrEllerAktørId);
         String aktørId = erFnr ? kandidatService.hentAktørId(fnrEllerAktørId) : fnrEllerAktørId;
+        String fnr = erFnr ? fnrEllerAktørId : kandidatService.hentFnr(fnrEllerAktørId);
 
-        tilgangskontroll.sjekkPilotTilgang();
         tilgangskontroll.sjekkSkrivetilgangTilKandidat(aktørId);
 
-        Optional<Integer> id = kandidatService.slettKandidat(aktørId, tilgangskontroll.hentInnloggetVeileder());
-
-        if (id.isEmpty()) {
-            return ResponseEntity.notFound().build();
+        //Nuller ut tilretteleggingsbehov, men sletter ikke..
+        KandidatDto kandidatDto = KandidatDto.builder().fnr(fnr).aktørId(aktørId).build();
+        Veileder veileder = tilgangskontroll.hentInnloggetVeileder();
+        Optional<Kandidat> endretKandidat = kandidatService.endreKandidat(kandidatDto, veileder);
+        if (endretKandidat.isPresent()) {
+            return ResponseEntity.ok().build();
         }
-
-        return ResponseEntity.ok().build();
+        return ResponseEntity.notFound().build();
     }
 
     private void loggBrukAvEndepunkt(String endepunkt) {
